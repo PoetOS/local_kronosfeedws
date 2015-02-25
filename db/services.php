@@ -25,17 +25,24 @@
 
 $functions = array(
         'local_kronosfeedws_userset_create' => array(
-                'classname'   => 'local_kronosfeedws_userset_create',
+                'classname'   => 'local_kronosfeedws_userset',
                 'methodname'  => 'userset_create',
-                'classpath'   => 'local/kronosfeedws/kronos_userset_create.class.php',
+                'classpath'   => 'local/kronosfeedws/local_kronosfeedws_userset.class.php',
                 'description' => 'Create a userset',
+                'type'        => 'write',
+        ),
+        'local_kronosfeedws_userset_update' => array(
+                'classname'   => 'local_kronosfeedws_userset',
+                'methodname'  => 'userset_update',
+                'classpath'   => 'local/kronosfeedws/local_kronosfeedws_userset.class.php',
+                'description' => 'Update a userset',
                 'type'        => 'write',
         )
 );
 
 $services = array(
         'Kronos feed web service' => array(
-                'functions' => array('local_kronosfeedws_userset_create'),
+                'functions' => array('local_kronosfeedws_userset_create', 'local_kronosfeedws_userset_update'),
                 'restrictedusers' => 0,
                 'enabled' => 1,
         )

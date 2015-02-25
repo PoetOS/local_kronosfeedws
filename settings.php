@@ -44,6 +44,8 @@ if ($hassiteconfig) {
         foreach ($fields as $field) {
             if ('datetime' == $field->datatype) {
                 $customfieldsdatetime[$field->id] = $field->name;
+            } else if ('char' == $field->datatype) {
+                $solmoodlecustomfield[$field->id] = $field->name;
             }
         }
     }
@@ -52,6 +54,16 @@ if ($hassiteconfig) {
     if (empty($customfieldsdatetime)) {
         $customfieldsdatetime['0'] = get_string('no_field_selected', $plugin);
     }
+
+    if (empty($solmoodlecustomfield)) {
+        $solmoodlecustomfield['0'] = get_string('no_field_selected', $plugin);
+    }
+
+    $title = get_string('solutionid_field', $plugin);
+    $desc = get_string('solutionid_field_desc', $plugin);
+    $setting = new \admin_setting_configselect('solutionid', $title, $desc, null, $solmoodlecustomfield);
+    $setting->plugin = $plugin;
+    $settings->add($setting);
 
     $title = get_string('expiry_field', $plugin);
     $desc = get_string('expiry_field_desc', $plugin);

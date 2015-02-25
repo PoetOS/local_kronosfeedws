@@ -35,3 +35,5 @@ $string['expiry_field'] = 'Expiry date';
 $string['expiry_field_desc'] = 'Select the ELIS User Set profile field that represents the User Set Expiry date.  Only User Set custom fields that are defined as datetime fields will be shown.';
 $string['extension_field'] = 'Extension date';
 $string['extension_field_desc'] = 'Select the ELIS User Set profile field that represents the User Set Extension date.  Only User Set custom fields that are defined as datetime fields will be shown.';
+$string['solutionid_field'] = 'User Set Solution ID';
+$string['solutionid_field_desc'] = 'Select the User Set profile field used to store the Solution ID.';
