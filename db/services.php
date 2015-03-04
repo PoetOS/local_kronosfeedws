@@ -37,7 +37,14 @@ $functions = array(
                 'classpath'   => 'local/kronosfeedws/local_kronosfeedws_userset.class.php',
                 'description' => 'Update a userset',
                 'type'        => 'write',
-        )
+        ),
+        'local_kronosfeedws_userset_create_update' => array(
+                'classname'   => 'local_kronosfeedws_userset',
+                'methodname'  => 'userset_create_update',
+                'classpath'   => 'local/kronosfeedws/local_kronosfeedws_userset.class.php',
+                'description' => 'This method creates a new User Set, if the Soludion Id and Name combination do not exist.  If they do exist the User Set will be updated.',
+                'type'        => 'write',
+        ),
 );
 
 $services = array(

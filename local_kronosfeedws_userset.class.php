@@ -73,6 +73,7 @@ class local_kronosfeedws_userset extends external_api {
         global $DB;
         $params = array(
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_REQUIRED),
+            'solutionid' => new external_value(PARAM_TEXT, 'The User Set solution ID', VALUE_OPTIONAL),
             'display' => new external_value(PARAM_TEXT, 'Userset description', VALUE_OPTIONAL),
             'parent' => new external_value(PARAM_TEXT, 'Userset parent name', VALUE_OPTIONAL),
             'expiry' => new external_value(PARAM_TEXT, 'Customer User expiry date in the following format: YYYY-MM-DD hh:mm:ss', VALUE_OPTIONAL),
@@ -223,6 +224,20 @@ class local_kronosfeedws_userset extends external_api {
 
         // Add expiry date to parameters array.
         $params['field_'.$expirydate[0]] = $expirydate[1];
+
+        // If the Solution Id parameter is passed and another User Set with the same Solution Id exists, then return an error.
+        // If the Solution Id parameter is passed and no other User Set exists with the same Solution Id, then add the Solution Id value to be created with the User Set.
+        // Otherwise continue as usual.
+        if (isset($params['solutionid']) && self::userset_second_level_solutionid_exists($params['solutionid'])) {
+            // Return an error because we should not create a new User Set when another User Set exists with the same Solutoin Id.
+            return self::create_error_structure(-10, 'Solution Id already exists.  Unable to create a new User Set with a matching Solution Id.');
+        } else if (isset($params['solutionid'])) {
+            // Retireve the solution id shortname.
+            $usetsolutionfieldid = get_config('local_kronosfeedws', 'solutionid');
+            $solutionidshortname = self::retireve_field_shortname($usetsolutionfieldid);
+            // Set the Solution Id.
+            $params['field_'.$solutionidshortname] = $params['solutionid'];
+        }
 
         // Context validation.
         $context = context_user::instance($USER->id);
@@ -523,7 +538,7 @@ class local_kronosfeedws_userset extends external_api {
     public static function get_userset_update_input_object_description() {
         global $DB;
         $params = array(
-            'solutionid' => new external_value(PARAM_TEXT, 'The User Set solutiion ID', VALUE_REQUIRED),
+            'solutionid' => new external_value(PARAM_TEXT, 'The User Set local_kronosfeedws_userset ID', VALUE_REQUIRED),
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_OPTIONAL),
             'display' => new external_value(PARAM_TEXT, 'Userset description', VALUE_OPTIONAL),
             'parent' => new external_value(PARAM_TEXT, 'Userset parent name. If the parent field is left empty, the User Set created will be a top level User Set', VALUE_OPTIONAL),
@@ -831,5 +846,76 @@ class local_kronosfeedws_userset extends external_api {
                 'id' => 0,
                 'name' => 'NULL')
         );
+    }
+
+    /**
+     * Returns description of method parameters
+     * @return external_function_parameters The parameters object for this webservice method.
+     */
+    public static function userset_create_update_parameters() {
+        $params = array('data' => new external_single_structure(static::get_userset_update_input_object_description()));
+        return new external_function_parameters($params);
+    }
+
+    /**
+     * Returns description of method result value
+     * @return external_single_structure Object describing return parameters for this webservice method.
+     */
+    public static function userset_create_update_returns() {
+        return new external_single_structure(
+                array(
+                    'messagecode' => new external_value(PARAM_INT, 'Response Code'),
+                    'message' => new external_value(PARAM_TEXT, 'Response'),
+                    'record' => new external_single_structure(static::get_userset_output_object_description())
+                )
+        );
+    }
+
+    /**
+     * This function returns the shortname of a custom profile field.
+     * @param int $fieldid The id of the field.
+     * @return string The shortname of the field.
+     */
+    public static function retireve_field_shortname($fieldid) {
+        global $DB;
+
+        if (empty($fieldid)) {
+            return 'field_does_not_exist';
+        }
+
+        $usetsolutionfieldid = get_config('local_kronosfeedws', 'solutionid');
+        $result = $DB->get_record('local_eliscore_field', array('id' => $fieldid));
+
+        if (empty($result)) {
+            return 'field_does_not_exist';
+        }
+
+        return $result->shortname;
+    }
+
+    /**
+     * This function creates a User Set, if no User Set is found with a matching Solution Id.  If a matching Solution Id is found then the User Set is updated.
+     * @throws moodle_exception If there was an error in passed parameters.
+     * @throws data_object_exception If there was an error creating the entity.
+     * @param array $data The incoming data parameter.
+     * @return array An array of parameters, if successful.
+     */
+    public static function userset_create_update(array $data) {
+        if (static::require_elis_dependencies() !== true) {
+            throw new moodle_exception('ws_function_requires_elis', 'local_kronosfeedws');
+        }
+
+        // Parameter validation.
+        $params = self::validate_parameters(self::userset_create_update_parameters(), array('data' => $data));
+        $params = $params['data'];
+
+        // Retrieve a User Set via a the solution id.
+        $usersetobj = self::userset_second_level_solutionid_exists($params['solutionid']);
+
+        if (empty($usersetobj)) {
+            return self::userset_create($data);
+        } else {
+            return self::userset_update($data);
+        }
     }
 }

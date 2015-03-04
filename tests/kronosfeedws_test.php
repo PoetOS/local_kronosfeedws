@@ -239,7 +239,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'invalidautoassociate',
             'display' => 'phpunit test description',
             'autoassociate1' => 'doesnotexist',
-            'autoassociate1_value' => 'doesnotexist'
+            'autoassociate1_value' => 'doesnotexist',
         );
 
         $this->give_permissions(array('local/elisprogram:userset_create'));
@@ -268,7 +268,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'invalidautoassociate',
             'display' => 'phpunit test description',
             'autoassociate1' => 'testdate',
-            'autoassociate1_value' => 'doesnotexist'
+            'autoassociate1_value' => 'doesnotexist',
         );
 
         $this->give_permissions(array('local/elisprogram:userset_create'));
@@ -328,7 +328,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'invalidautoassociate',
             'display' => 'phpunit test description',
             'autoassociate1' => 'testtext',
-            'autoassociate1_value' => ''
+            'autoassociate1_value' => '',
         );
 
         $this->give_permissions(array('local/elisprogram:userset_create'));
@@ -373,7 +373,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'invalidautoassociate',
             'display' => 'phpunit test description',
             'autoassociate1' => 'testdropdownwithdefault',
-            'autoassociate1_value' => 'five'
+            'autoassociate1_value' => 'five',
         );
 
         $this->give_permissions(array('local/elisprogram:userset_create'));
@@ -403,7 +403,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'testusersetname',
             'display' => 'Userset Description',
             'field_testfield' => 'Test field',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -453,7 +453,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'field_testfield' => 'Test field',
             'autoassociate1' => 'testdropdownwithdefault',
             'autoassociate1_value' => 'two',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -507,7 +507,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'field_testfield' => 'Test field',
             'autoassociate1' => 'testcheckboxdefaultunchecked',
             'autoassociate1_value' => 'checked',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -561,7 +561,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'field_testfield' => 'Test field',
             'autoassociate1' => 'testcheckboxdefaultunchecked',
             'autoassociate1_value' => '',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -615,7 +615,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'field_testfield' => 'Test field',
             'autoassociate1' => 'testtext',
             'autoassociate1_value' => 'TEST1234',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -671,7 +671,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'autoassociate1_value' => 'checked',
             'autoassociate2' => 'testtext',
             'autoassociate2_value' => 'TEST1234',
-            'expiry' => '2015-01-01 12:00:05'
+            'expiry' => '2015-01-01 12:00:05',
         );
 
         $response = local_kronosfeedws_userset::userset_create($userset);
@@ -805,7 +805,6 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'testparent',
             'display' => 'Userset Description',
             'expiry' => '2015-01-01 12:00:05',
-            'field_'.$this->usersettextfield->shortname => ''
         );
 
         // Create Parent User Set.
@@ -816,7 +815,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'parent' => 'testparent',
             'display' => 'Userset Description',
             'expiry' => '2015-01-01 12:00:05',
-            'field_'.$this->usersettextfield->shortname => 'TEST1234'
+            'solutionid' => 'TEST1234',
         );
 
         // Create a User Set with solution id of 'TEST1234'.
@@ -1265,5 +1264,86 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         $select = "clusterid = ".$response['record']['id']." AND fieldid = 8 AND ".$DB->sql_compare_text('value', 8)." = 'TEST1234'";
         $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
         $this->assertTrue($result);
+    }
+
+    /**
+     * Test creating and updating a User Set.
+     */
+    public function test_userset_create_update_success() {
+        $this->give_permissions(array('local/elisprogram:userset_create'));
+
+        set_config('expiry', $this->usersetdatefield->id, 'local_kronosfeedws');
+        set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
+        set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
+
+        $expiryfield = 'field_'.$this->usersetdatefield->shortname;
+        $extensionfield = 'field_'.$this->usersetdatefieldextension->shortname;
+        $solutionidfield = 'field_'.$this->usersettextfield->shortname;
+
+        $userset = array(
+            'name' => 'testusersetname',
+            'display' => 'Userset Description',
+            'field_testfield' => 'Test field',
+            'expiry' => '2015-01-01 12:00:05',
+            'solutionid' => 'TEST1234',
+        );
+
+        $response = local_kronosfeedws_userset::userset_create_update($userset);
+
+        $this->assertNotEmpty($response);
+        $this->assertInternalType('array', $response);
+        $this->assertArrayHasKey('messagecode', $response);
+        $this->assertArrayHasKey('message', $response);
+        $this->assertArrayHasKey('record', $response);
+        $this->assertEquals(1, $response['messagecode']);
+        $this->assertEquals('Userset created successfully', $response['message']);
+
+        $this->assertInternalType('array', $response['record']);
+        $this->assertArrayHasKey('id', $response['record']);
+
+        // Get Userset.
+        $createdus = new userset($response['record']['id']);
+        $createdus->load();
+        $createdus = $createdus->to_array();
+        $expectus = array(
+            'id' => $response['record']['id'],
+            'name' => 'testusersetname',
+            'display' => 'Userset Description',
+            'parent' => 0,
+            $solutionidfield => 'TEST1234'
+        );
+
+        foreach ($expectus as $param => $val) {
+            $this->assertArrayHasKey($param, $createdus);
+            $this->assertEquals($val, $createdus[$param]);
+        }
+
+        $userset = array(
+            'name' => 'testusersetname_updated',
+            'display' => 'Userset Description (Updated)',
+            'field_testfield' => 'Test field (Updated)',
+            'expiry' => '2015-01-01 12:00:05',
+            'solutionid' => 'TEST1234',
+        );
+
+        $response = local_kronosfeedws_userset::userset_create_update($userset);
+
+        // Get Userset.
+        $createdus = new userset($response['record']['id']);
+        $createdus->load();
+        $createdus = $createdus->to_array();
+        $expectus = array(
+            'id' => $response['record']['id'],
+            'name' => 'testusersetname_updated',
+            'display' => 'Userset Description (Updated)',
+            'field_testfield' => 'Test field (Updated)',
+            'parent' => 0,
+            $solutionidfield => 'TEST1234'
+        );
+
+        foreach ($expectus as $param => $val) {
+            $this->assertArrayHasKey($param, $createdus);
+            $this->assertEquals($val, $createdus[$param]);
+        }
     }
 }
