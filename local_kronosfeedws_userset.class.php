@@ -727,6 +727,10 @@ class local_kronosfeedws_userset extends external_api {
 
         // Initialize the User Set object, setting the properties from the data object.
         $userset = new userset($usersetobj->usersetid);
+        // Resolves KRONOSDEV-67, otherwise the depth will get set to 1 and will prevent the Solution ID search method from finding a the User Set.
+        $userset->parent;
+        $userset->depth;
+
         $userset->set_from_data($record);
 
         // Apply the Kronos business logic for setting the expiry date.

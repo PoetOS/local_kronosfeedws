@@ -1346,4 +1346,65 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             $this->assertEquals($val, $createdus[$param]);
         }
     }
+
+    /**
+     * Testing User Set creation and update excluding the parent parameter. As reported in KRONOSDEV-67.
+     */
+    public function test_userset_create_and_update_without_parent_parameter() {
+        $this->setup_test_data_xml();
+        $this->give_permissions(array('local/elisprogram:userset_create', 'local/elisprogram:userset_edit'));
+        set_config('expiry', $this->usersetdatefield->id, 'local_kronosfeedws');
+        set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
+        set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
+
+        $expiryfield = 'field_'.$this->usersetdatefield->shortname;
+        $extensionfield = 'field_'.$this->usersetdatefieldextension->shortname;
+        $solutionidfield = 'field_'.$this->usersettextfield->shortname;
+
+        $userset = array(
+            'name' => 'testaudiencetype',
+            'display' => 'Userset Description',
+        );
+
+        // Create Parent User Set.
+        $audiencetype = local_kronosfeedws_userset::userset_create($userset);
+
+        $userset = array(
+            'name' => 'testusersetname',
+            'display' => 'No change',
+            'parent' => 'testaudiencetype',
+            'display' => 'Userset Description',
+            'expiry' => '2015-01-01 12:00:05',
+            'solutionid' => 'TEST1234',
+        );
+
+        $response = local_kronosfeedws_userset::userset_create($userset);
+
+        $userset = array(
+            'solutionid' => 'TEST1234',
+            'name' => 'new testusersetname',
+            'display' => '1st change',
+        );
+
+        $response = local_kronosfeedws_userset::userset_update($userset);
+
+        $createdus = new userset($response['record']['id']);
+        $createdus->load();
+        $createdus = $createdus->to_array();
+
+        $userset = array(
+            'solutionid' => 'TEST1234',
+            'name' => 'testusersetname',
+            'display' => '2nd change',
+        );
+
+        $response = local_kronosfeedws_userset::userset_update($userset);
+
+        $this->assertEquals(1, $response['messagecode']);
+        $this->assertArrayHasKey('record', $response);
+        $this->assertEquals($createdus['id'], $response['record']['id']);
+        $this->assertEquals('testusersetname', $response['record']['name']);
+        $this->assertEquals('2nd change', $response['record']['display']);
+        $this->assertEquals('TEST1234', $response['record'][$solutionidfield]);
+    }
 }
