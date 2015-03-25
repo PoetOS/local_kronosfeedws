@@ -1407,4 +1407,56 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         $this->assertEquals('2nd change', $response['record']['display']);
         $this->assertEquals('TEST1234', $response['record'][$solutionidfield]);
     }
+
+    /**
+     * Test creating a User Set using an autoassociate parameter, then updating the same User Set excluding the auto-associate parameter
+     */
+    public function test_userset_update_excluding_autoassociate_value_on_second_update() {
+        global $DB;
+
+        $this->setup_test_data_xml();
+        $this->give_permissions(array('local/elisprogram:userset_create', 'local/elisprogram:userset_edit'));
+        set_config('expiry', $this->usersetdatefield->id, 'local_kronosfeedws');
+        set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
+        set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
+
+        // Create audience type User Set.
+        $userset = array(
+            'name' => 'testaudiencetype',
+            'display' => 'Userset Description',
+        );
+        $audiencetype = local_kronosfeedws_userset::userset_create($userset);
+
+        // Create Solution ID User Set.
+        $userset = array(
+            'name' => 'testusersetname',
+            'display' => 'No change',
+            'parent' => 'testaudiencetype',
+            'display' => 'Userset Description',
+            'expiry' => '2015-01-01 12:00:05',
+            'solutionid' => '1234',
+            'autoassociate1' => 'testdropdownwithdefault',
+            'autoassociate1_value' => 'two',
+        );
+        $response = local_kronosfeedws_userset::userset_create($userset);
+
+        // Test to verify the auto associate value is set for the User Set.
+        $select = "clusterid = ".$response['record']['id']." AND fieldid = 1 AND ".$DB->sql_compare_text('value', 3)." = 'two'";
+        $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
+        $this->assertTrue($result);
+
+        // Update the Solution Id User Set.  Exclude the auto associate parameters.
+        $userset = array(
+            'solutionid' => '1234',
+            'name' => 'testusersetname',
+            'display' => 'No change',
+        );
+
+        $response = local_kronosfeedws_userset::userset_update($userset);
+
+        // Test to verify the auto associate value is set for the User Set.
+        $select = "clusterid = ".$response['record']['id']." AND fieldid = 1 AND ".$DB->sql_compare_text('value', 3)." = 'two'";
+        $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
+        $this->assertTrue($result);
+    }
 }

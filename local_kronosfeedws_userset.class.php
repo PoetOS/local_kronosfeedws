@@ -184,34 +184,33 @@ class local_kronosfeedws_userset extends external_api {
         $params = self::validate_parameters(self::userset_create_parameters(), array('data' => $data));
         $params = $params['data'];
 
-        // Additional validation of the auto-association field names and their values.
+        $autoassociateone = null;
+        $autoassociateonevalue = '';
+        $autoassociatetwo = null;
+        $autoassociatetwovalue = '';
+
+        // If parameter was included and is a non empty value then validate the data and set the auto association field.
         if (isset($params['autoassociate1']) && '' != $params['autoassociate1'] && isset($params['autoassociate1_value'])) {
             $result = self::validate_autoassociate_field($params['autoassociate1'], $params['autoassociate1_value']);
 
             if (isset($result['messagecode'])) {
                 return $result;
             } else {
-                $params['autoassociate1'] = $result[0];
-                $params['autoassociate1_value'] = $result[1];
+                $autoassociateone = $result[0];
+                $autoassociateonevalue = $result[1];
             }
-        } else {
-            $params['autoassociate1'] = 0;
-            $params['autoassociate1_value'] = 0;
         }
 
-        // Additional validation of the auto-association field names and their values.
+        // If parameter was included and is a non empty value then validate the data and set the auto association field.
         if (isset($params['autoassociate2']) && '' != $params['autoassociate2'] && isset($params['autoassociate2_value'])) {
             $result = self::validate_autoassociate_field($params['autoassociate2'], $params['autoassociate2_value']);
 
             if (isset($result['messagecode'])) {
                 return $result;
             } else {
-                $params['autoassociate2'] = $result[0];
-                $params['autoassociate2_value'] = $result[1];
+                $autoassociatetwo = $result[0];
+                $autoassociatetwovalue = $result[1];
             }
-        } else {
-            $params['autoassociate2'] = 0;
-            $params['autoassociate2_value'] = 0;
         }
 
         // Validate the expiry date format and field.
@@ -247,6 +246,11 @@ class local_kronosfeedws_userset extends external_api {
         require_capability('local/elisprogram:userset_create', context_system::instance());
 
         $data = (object)$params;
+        $data->autoassociate1 = $autoassociateone;
+        $data->autoassociate1_value = $autoassociateonevalue;
+        $data->autoassociate2 = $autoassociatetwo;
+        $data->autoassociate2_value = $autoassociatetwovalue;
+
         $record = new stdClass;
         $record = $data;
 
@@ -264,10 +268,11 @@ class local_kronosfeedws_userset extends external_api {
 
         $userset = new userset();
         $userset->set_from_data($record);
-        $userset->save();
 
         // Save auto-associate field values.
         self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2, $data->autoassociate2_value);
+
+        $userset->save();
 
         // Respond.
         if (!empty($userset->id)) {
@@ -393,7 +398,9 @@ class local_kronosfeedws_userset extends external_api {
     }
 
     /**
-     * This code is refactored from @see userset_moodleprofile_update(). This function updates the ELIS user Set auto association record.
+     * This function sets a key in the POST global so that @see userset_moodleprofile_update() doesn't overwrite the User Set
+     * autoassociate values when a User Set is updated.  This was done to avoid having to customize ELIS's User Set, and
+     * User Set moodle profile enrolment plug-in.
      * @param int $usersetid The User Set id.
      * @param int $firstaafieldid The Moodle profile field id for the first auto associate field.
      * @param string $firstaafieldvalue The Moodle profile field value for the first auto associate field.
@@ -403,94 +410,44 @@ class local_kronosfeedws_userset extends external_api {
     public static function set_auto_associate_field($usersetid, $firstaafieldid = 0, $firstaafieldvalue = '', $secondaafieldid = 0, $secondaafieldvalue = '') {
         global $DB;
 
-        // Get the "new" profile field assignment values.
-        $new = array();
-
-        if (!empty($firstaafieldid)) {
-            $new[$firstaafieldid] = $firstaafieldvalue;
-        }
-
-        if (!empty($secondaafieldid)) {
-            $new[$secondaafieldid] = $secondaafieldvalue;
-        }
-
         // Get the "old" (existing) profile field assignment values.
         $old = userset_profile::find(new field_filter('clusterid', $usersetid), array(), 0, 2)->to_array();
 
-        $updated = false;
+        if (empty($old)) {
+            if (!empty($firstaafieldid)) {
+                $_POST["profile_field1"] = $firstaafieldid;
+                $_POST["profile_value1"] = $firstaafieldvalue;
+            }
 
-        // Compare old values against new values.
+            if (!empty($secondaafieldid)) {
+                $_POST["profile_field2"] = $secondaafieldid;
+                $_POST["profile_value2"] = $secondaafieldvalue;
+            }
+        }
+
+        $i = 1;
         foreach ($old as $field) {
-            if (!isset($new[$field->id])) {
-                // Old field is no longer a field.
-                $field->delete();
-                unset($old[$field->id]);
-                $updated = true;
-            } else if ($new[$field->id] != $field->value) {
-                // Value has changed.
-                $field->value = $new[$field->id];
-                $field->save();
-                $updated = true;
-            }
-        }
-
-        // Check for added fields.
-        $added = array_diff_key($new, $old);
-        foreach ($added as $fieldid => $value) {
-            $record = new userset_profile();
-            $record->clusterid = $usersetid;
-            $record->fieldid = $fieldid;
-            $record->value = $value;
-            $record->save();
-            $updated = true;
-        }
-
-        if ($updated) {
-            // Re-assign users: remove previous cluster assignments.
-            clusterassignment::delete_records(array(new field_filter('clusterid', $usersetid), new field_filter('plugin', 'moodleprofile')));
-
-            // Create new cluster assignments.
-            $join  = '';
-            $joinparams = array();
-            $whereclauses = array();
-            $whereparams = array();
-            $i = 1;
-
-            foreach ($new as $fieldid => $value) {
-                // Check if the desired field value is equal to the field's default value if so, we need to include users that don't have an associated entry in user_info_data.
-                $defaultvalue = $DB->get_field('user_info_field', 'defaultdata', array('id' => $fieldid));
-                $isdefault    = ($value == $defaultvalue);
-
-                $join .= ($isdefault ? ' LEFT' : ' INNER')." JOIN {user_info_data} inf{$i} ON mu.id = inf{$i}.userid AND inf{$i}.fieldid = ?";
-                $joinparams[] = $fieldid;
-                $where = "(inf{$i}.data = ?";
-
-                // If desired field is the default.
-                if ($isdefault) {
-                    $where .= " OR inf{$i}.userid IS NULL";
-                }
-                $where .= ')';
-                $whereclauses[] = $where;
-                $whereparams[] = $value;
-                $i++;
+            if (1 == $i) {
+                $tempfieldid = $firstaafieldid;
+                $tempfieldvalue = $firstaafieldvalue;
+            } else if (2 == $i) {
+                $tempfieldid = $secondaafieldid;
+                $tempfieldvalue = $secondaafieldvalue;
             }
 
-            // Use the clauses to construct a where condition.
-            $whereclause = implode(' AND ', $whereclauses);
-
-            if (!empty($join) && !empty($where)) {
-                $sql = "INSERT INTO {".clusterassignment::TABLE."} (clusterid, userid, plugin)
-                             SELECT ?, cu.id, 'moodleprofile'
-                               FROM {" . user::TABLE . "} cu
-                         INNER JOIN {user} mu ON mu.idnumber = cu.idnumber
-                                    $join
-                              WHERE $whereclause";
-                $params = array_merge(array($usersetid), $joinparams, $whereparams);
-
-                $DB->execute($sql, $params);
+            // If the auto-associate field is empty OR auto-associate field is the same field and value as the current field
+            // Initialize the post global key to the old value.  This will prevent ELIS from deleting the old field.
+            if (empty($tempfieldid) || ($tempfieldid == $field->id && $tempfieldvalue == $field->value)) {
+                $_POST["profile_field{$i}"] = $field->id;
+                $_POST["profile_value{$i}"] = $field->value;
+            } else {
+                // If the auto-associate field is not empty or if the field id or value is different, then initialize the
+                // post global to the new values.
+                $_POST["profile_field{$i}"] = $tempfieldid;
+                $_POST["profile_value{$i}"] = $tempfieldvalue;
             }
 
-            clusterassignment::update_enrolments(0, $usersetid);
+            $i++;
         }
     }
 
@@ -655,34 +612,33 @@ class local_kronosfeedws_userset extends external_api {
         $params = self::validate_parameters(self::userset_update_parameters(), array('data' => $data));
         $params = $params['data'];
 
-        // Additional validation of the auto-association field names and their values.
+        $autoassociateone = null;
+        $autoassociateonevalue = '';
+        $autoassociatetwo = null;
+        $autoassociatetwovalue = '';
+
+        // If parameter was included and is a non empty value then validate the data and set the auto association field.
         if (isset($params['autoassociate1']) && '' != $params['autoassociate1'] && isset($params['autoassociate1_value'])) {
             $result = self::validate_autoassociate_field($params['autoassociate1'], $params['autoassociate1_value']);
 
             if (isset($result['messagecode'])) {
                 return $result;
             } else {
-                $params['autoassociate1'] = $result[0];
-                $params['autoassociate1_value'] = $result[1];
+                $autoassociateone = $result[0];
+                $autoassociateonevalue = $result[1];
             }
-        } else {
-            $params['autoassociate1'] = 0;
-            $params['autoassociate1_value'] = 0;
         }
 
-        // Additional validation of the auto-association field names and their values.
+        // If parameter was included and is a non empty value then validate the data and set the auto association field.
         if (isset($params['autoassociate2']) && '' != $params['autoassociate2'] && isset($params['autoassociate2_value'])) {
             $result = self::validate_autoassociate_field($params['autoassociate2'], $params['autoassociate2_value']);
 
             if (isset($result['messagecode'])) {
                 return $result;
             } else {
-                $params['autoassociate2'] = $result[0];
-                $params['autoassociate2_value'] = $result[1];
+                $autoassociatetwo = $result[0];
+                $autoassociatetwovalue = $result[1];
             }
-        } else {
-            $params['autoassociate2'] = 0;
-            $params['autoassociate2_value'] = 0;
         }
 
         // Validate the expiry date format and field.
@@ -701,6 +657,11 @@ class local_kronosfeedws_userset extends external_api {
         self::validate_context($context);
 
         $data = (object) $params;
+        $data->autoassociate1 = $autoassociateone;
+        $data->autoassociate1_value = $autoassociateonevalue;
+        $data->autoassociate2 = $autoassociatetwo;
+        $data->autoassociate2_value = $autoassociatetwovalue;
+
         $record = new stdClass;
         // Need all custom fields, etc.
         $record = $data;
@@ -735,10 +696,11 @@ class local_kronosfeedws_userset extends external_api {
 
         // Apply the Kronos business logic for setting the expiry date.
         $userset = self::userset_set_new_expiry_date($userset, $expirydate[0], $expirydate[1]);
-        $userset->save();
 
         // Save auto-associate field values.
         self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2, $data->autoassociate2_value);
+
+        $userset->save();
 
         // Respond.
         if (!empty($userset->id)) {
