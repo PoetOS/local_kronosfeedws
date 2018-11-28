@@ -72,7 +72,6 @@ class local_kronosfeedws_userset extends external_api {
      * @return array An array of external_value objects describing a user record in webservice terms.
      */
     public static function get_userset_input_object_description() {
-        global $DB;
         $params = array(
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_REQUIRED),
             'solutionid' => new external_value(PARAM_TEXT, 'The User Set solution ID', VALUE_OPTIONAL),
@@ -119,7 +118,6 @@ class local_kronosfeedws_userset extends external_api {
      * @return array An array of external_value objects describing a user record in webservice terms.
      */
     public static function get_userset_output_object_description() {
-        global $DB;
         $params = array(
             'id' => new external_value(PARAM_INT, 'Userset DB id', VALUE_REQUIRED),
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_REQUIRED),
@@ -417,8 +415,6 @@ class local_kronosfeedws_userset extends external_api {
      */
     public static function set_auto_associate_field($usersetid, $firstaafieldid = 0, $firstaafieldvalue = '', $secondaafieldid = 0,
                                                     $secondaafieldvalue = '') {
-        global $DB;
-
         // Get the "old" (existing) profile field assignment values.
         $old = userset_profile::find(new field_filter('clusterid', $usersetid), array(), 0, 2)->to_array();
 
@@ -473,7 +469,8 @@ class local_kronosfeedws_userset extends external_api {
         // Check if the expiry date configuration setting for the plug-in has been set.
         $expiryfieldid = get_config('local_kronosfeedws', 'expiry');
 
-        // Check if the configured field exists in the ELIS profile fields table, has a data type of datetime and belongs to the User Set context.
+        // Check if the configured field exists in the ELIS profile fields table, has a data type of datetime and belongs to the
+        // User Set context.
         $sql = 'SELECT f.id, shortname, name, datatype
                   FROM {'.field::TABLE.'} f
                   JOIN {'.field_contextlevel::TABLE.'} fctx ON f.id = fctx.fieldid AND fctx.contextlevel = ?
@@ -505,7 +502,6 @@ class local_kronosfeedws_userset extends external_api {
      * @return array An array of external_value objects describing a user record in webservice terms.
      */
     public static function get_userset_update_input_object_description() {
-        global $DB;
         $params = array(
             'solutionid' => new external_value(PARAM_TEXT, 'The User Set local_kronosfeedws_userset ID', VALUE_REQUIRED),
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_OPTIONAL),

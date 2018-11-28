@@ -653,7 +653,8 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             $this->assertEquals($val, $createdus[$param]);
         }
 
-        $select = "clusterid = ".$response['record']['id']." AND fieldid = 8 AND ".$DB->sql_compare_text('value', 8)." = 'TEST1234'";
+        $select = "clusterid = " . $response['record']['id'] . " AND fieldid = 8 AND " . $DB->sql_compare_text('value', 8) .
+            " = 'TEST1234'";
         $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
         $this->assertTrue($result);
     }
@@ -713,7 +714,8 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
         $this->assertTrue($result);
 
-        $select = "clusterid = ".$response['record']['id']." AND fieldid = 8 AND ".$DB->sql_compare_text('value', 8)." = 'TEST1234'";
+        $select = "clusterid = " . $response['record']['id'] . " AND fieldid = 8 AND " . $DB->sql_compare_text('value', 8) .
+            " = 'TEST1234'";
         $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
     }
 
@@ -880,11 +882,13 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $mockuserset = new stdClass();
         $mockuserset->id = $originaluserset->id;
-        // Setting the expiry propery of the mock User Set to a value that is less than value used by User Set "testusersetname" above.
+        // Setting the expiry propery of the mock User Set to a value that is less than value used by User Set "testusersetname"
+        // above.
         $mockuserset->$expiryfield = $originaluserset->$expiryfield - 100;
         $mockuserset->$extensionfield = $originaluserset->$expiryfield;
 
-        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname, $mockuserset->$expiryfield);
+        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname,
+            $mockuserset->$expiryfield);
 
         // Assert that the expiry and extention values are uncharnged from the originally set values.
         $this->assertEquals($originaluserset->$expiryfield, $result->$expiryfield);
@@ -924,10 +928,12 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $mockuserset = new stdClass();
         $mockuserset->id = $originaluserset->id;
-        // Setting the expiry propery of the mock User Set to a value that is greater than value used by User Set "testusersetname" above, but less than the extension date.
+        // Setting the expiry propery of the mock User Set to a value that is greater than value used by User Set "testusersetname"
+        // above, but less than the extension date.
         $mockuserset->$expiryfield = strtotime('2015-05-02 12:00:00');
 
-        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname, $mockuserset->$expiryfield);
+        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname,
+            $mockuserset->$expiryfield);
 
         // Assert that the expiry and extention values are uncharnged from the originally set values.
         $this->assertEquals($originaluserset->$expiryfield, $result->$expiryfield);
@@ -967,10 +973,12 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $mockuserset = new stdClass();
         $mockuserset->id = $originaluserset->id;
-        // Setting the expiry propery of the mock User Set to a value that is greater than value used by User Set "testusersetname" above and greater than extension date.
+        // Setting the expiry propery of the mock User Set to a value that is greater than value used by User Set "testusersetname"
+        // above and greater than extension date.
         $mockuserset->$expiryfield = strtotime('2015-06-02 12:00:00');
 
-        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname, $mockuserset->$expiryfield);
+        $result = local_kronosfeedws_userset::userset_set_new_expiry_date($mockuserset, $this->usersetdatefield->shortname,
+            $mockuserset->$expiryfield);
 
         // Assert that the expiry and extention values are uncharnged from the originally set values.
         $this->assertEquals(strtotime('2015-06-02 12:00:00'), $result->$expiryfield);
@@ -1102,7 +1110,8 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $response = local_kronosfeedws_userset::userset_update($userset);
 
-        // Assert that the original expiry value used to create the user set, remains the same after the call to update the User Set.
+        // Assert that the original expiry value used to create the user set, remains the same after the call to update the
+        // User Set.
         $this->assertEquals($data['record'][$expiryfield], $response['record'][$expiryfield]);
     }
 
@@ -1148,9 +1157,11 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $response = local_kronosfeedws_userset::userset_update($userset);
 
-        // Assert that the original expiry value used to create the user set, remains the same after the call to update the User Set.
+        // Assert that the original expiry value used to create the user set, remains the same after the call to update the
+        // User Set.
         $this->assertEquals($data['record'][$expiryfield], $response['record'][$expiryfield]);
-        // Assert that the original extension value used to create the user set, remains the same after the call to update the User Set.
+        // Assert that the original extension value used to create the user set, remains the same after the call to update the
+        // User Set.
         $this->assertEquals($data['record'][$extensionfield], $response['record'][$extensionfield]);
     }
 
@@ -1186,7 +1197,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         );
 
         // Create Solution ID User Set.
-        $data = local_kronosfeedws_userset::userset_create($userset);
+        local_kronosfeedws_userset::userset_create($userset);
 
         // Set expiry date to July 1, 2015.
         $userset = array(
@@ -1196,9 +1207,11 @@ class local_kronosfeedws_testcases extends advanced_testcase {
 
         $response = local_kronosfeedws_userset::userset_update($userset);
 
-        // Assert that the original expiry value used to create the user set, remains the same after the call to update the User Set.
+        // Assert that the original expiry value used to create the user set, remains the same after the call to update the
+        // User Set.
         $this->assertEquals(strtotime('2015-07-01 12:00:00'), $response['record'][$expiryfield]);
-        // Assert that the original extension value used to create the user set, remains the same after the call to update the User Set.
+        // Assert that the original extension value used to create the user set, remains the same after the call to update the
+        // User Set.
         $this->assertEquals(strtotime(local_kronosfeedws_userset::DEFAULTDATE), $response['record'][$extensionfield]);
     }
 
@@ -1214,8 +1227,6 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
         set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
 
-        $expiryfield = 'field_'.$this->usersetdatefield->shortname;
-        $extensionfield = 'field_'.$this->usersetdatefieldextension->shortname;
         $solutionidfield = 'field_'.$this->usersettextfield->shortname;
 
         $userset = array(
@@ -1238,7 +1249,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             $solutionidfield => 'TEST1234',
         );
 
-        $response = local_kronosfeedws_userset::userset_create($userset);
+        local_kronosfeedws_userset::userset_create($userset);
 
         $userset = array(
             'solutionid' => 'TEST1234',
@@ -1266,7 +1277,8 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             $this->assertEquals($val, $createdus[$param]);
         }
 
-        $select = "clusterid = ".$response['record']['id']." AND fieldid = 8 AND ".$DB->sql_compare_text('value', 8)." = 'TEST1234'";
+        $select = "clusterid = " . $response['record']['id'] . " AND fieldid = 8 AND " . $DB->sql_compare_text('value', 8) .
+            " = 'TEST1234'";
         $result = $DB->record_exists_select('local_elisprogram_uset_prfle', $select);
         $this->assertTrue($result);
     }
@@ -1281,8 +1293,6 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
         set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
 
-        $expiryfield = 'field_'.$this->usersetdatefield->shortname;
-        $extensionfield = 'field_'.$this->usersetdatefieldextension->shortname;
         $solutionidfield = 'field_'.$this->usersettextfield->shortname;
 
         $userset = array(
@@ -1362,8 +1372,6 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         set_config('solutionid', $this->usersettextfield->id, 'local_kronosfeedws');
         set_config('extension', $this->usersetdatefieldextension->id, 'local_kronosfeedws');
 
-        $expiryfield = 'field_'.$this->usersetdatefield->shortname;
-        $extensionfield = 'field_'.$this->usersetdatefieldextension->shortname;
         $solutionidfield = 'field_'.$this->usersettextfield->shortname;
 
         $userset = array(
@@ -1372,7 +1380,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
         );
 
         // Create Parent User Set.
-        $audiencetype = local_kronosfeedws_userset::userset_create($userset);
+        local_kronosfeedws_userset::userset_create($userset);
 
         $userset = array(
             'name' => 'testusersetname',
@@ -1383,7 +1391,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'solutionid' => 'TEST1234',
         );
 
-        $response = local_kronosfeedws_userset::userset_create($userset);
+        local_kronosfeedws_userset::userset_create($userset);
 
         $userset = array(
             'solutionid' => 'TEST1234',
@@ -1414,7 +1422,8 @@ class local_kronosfeedws_testcases extends advanced_testcase {
     }
 
     /**
-     * Test creating a User Set using an autoassociate parameter, then updating the same User Set excluding the auto-associate parameter
+     * Test creating a User Set using an autoassociate parameter, then updating the same User Set excluding the auto-associate
+     * parameter
      */
     public function test_userset_update_excluding_autoassociate_value_on_second_update() {
         global $DB;
@@ -1430,7 +1439,7 @@ class local_kronosfeedws_testcases extends advanced_testcase {
             'name' => 'testaudiencetype',
             'display' => 'Userset Description',
         );
-        $audiencetype = local_kronosfeedws_userset::userset_create($userset);
+        local_kronosfeedws_userset::userset_create($userset);
 
         // Create Solution ID User Set.
         $userset = array(
