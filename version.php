@@ -25,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014121800;
+$plugin->version = 2018110100;
 $plugin->component = 'local_kronosfeedws';
 $plugin->requires = 2014051201.00;
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = 'Kronos feed web services';
+$plugin->maturity = MATURITY_BETA;
+$plugin->release = 'Kronos feed web services - 3.5.0 Beta';
 $plugin->dependencies = array(
     'local_elisprogram' => 2014082500
 );

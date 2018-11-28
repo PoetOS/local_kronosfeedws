@@ -25,6 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Test kronosfeedws functions.
+ *
+ * @group local_kronosfeedws
+ */
 class local_kronosfeedws_testcases extends advanced_testcase {
     /** @var object User Set field category object. */
     protected $usersetfieldcat = null;
