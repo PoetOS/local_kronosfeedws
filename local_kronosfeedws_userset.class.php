@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Kronos feed web services.
  *
@@ -24,7 +26,7 @@
  */
 
 /**
- * This class is bassed off of the datahub web service userset_create.  This class also adds parameters to 
+ * This class is bassed off of the datahub web service userset_create.  This class also adds parameters to
  * set the auto-association fields for a User Set.
  */
 class local_kronosfeedws_userset extends external_api {
@@ -76,7 +78,8 @@ class local_kronosfeedws_userset extends external_api {
             'solutionid' => new external_value(PARAM_TEXT, 'The User Set solution ID', VALUE_OPTIONAL),
             'display' => new external_value(PARAM_TEXT, 'Userset description', VALUE_OPTIONAL),
             'parent' => new external_value(PARAM_TEXT, 'Userset parent name', VALUE_OPTIONAL),
-            'expiry' => new external_value(PARAM_TEXT, 'Customer User expiry date in the following format: YYYY-MM-DD hh:mm:ss', VALUE_OPTIONAL),
+            'expiry' => new external_value(PARAM_TEXT, 'Customer User expiry date in the following format: YYYY-MM-DD hh:mm:ss',
+                VALUE_OPTIONAL),
             'autoassociate1' => new external_value(PARAM_TEXT, 'First auto-association Moodle field shortname', VALUE_OPTIONAL),
             'autoassociate1_value' => new external_value(PARAM_TEXT, 'First auto-association Moodle field value', VALUE_OPTIONAL),
             'autoassociate2' => new external_value(PARAM_TEXT, 'Second auto-association Moodle field shortname', VALUE_OPTIONAL),
@@ -225,11 +228,13 @@ class local_kronosfeedws_userset extends external_api {
         $params['field_'.$expirydate[0]] = $expirydate[1];
 
         // If the Solution Id parameter is passed and another User Set with the same Solution Id exists, then return an error.
-        // If the Solution Id parameter is passed and no other User Set exists with the same Solution Id, then add the Solution Id value to be created with the User Set.
+        // If the Solution Id parameter is passed and no other User Set exists with the same Solution Id, then add the Solution Id
+        // value to be created with the User Set.
         // Otherwise continue as usual.
         if (isset($params['solutionid']) && self::userset_second_level_solutionid_exists($params['solutionid'])) {
             // Return an error because we should not create a new User Set when another User Set exists with the same Solutoin Id.
-            return self::create_error_structure(-10, 'Solution Id already exists.  Unable to create a new User Set with a matching Solution Id.');
+            return self::create_error_structure(-10, 'Solution Id already exists.  Unable to create a new User Set with a ' .
+                'matching Solution Id.');
         } else if (isset($params['solutionid'])) {
             // Retireve the solution id shortname.
             $usetsolutionfieldid = get_config('local_kronosfeedws', 'solutionid');
@@ -270,7 +275,8 @@ class local_kronosfeedws_userset extends external_api {
         $userset->set_from_data($record);
 
         // Save auto-associate field values.
-        self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2, $data->autoassociate2_value);
+        self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2,
+            $data->autoassociate2_value);
 
         $userset->save();
 
@@ -365,7 +371,8 @@ class local_kronosfeedws_userset extends external_api {
      * This function calls additional validation methods
      * @param string $autoassociatefield The auto-associate field shortname
      * @param string $autoassociatefieldvalue The auto-associate field value
-     * @return array Returns an array with keys 'messagecode', 'message' and 'record' if there was a validation error.  Otherwise an empty array is returned.
+     * @return array Returns an array with keys 'messagecode', 'message' and 'record' if there was a validation error.
+     * Otherwise an empty array is returned.
      */
     public static function validate_autoassociate_field($autoassociatefield, $autoassociatefieldvalue) {
         $field = self::name_equals_moodle_field_shortname($autoassociatefield);
@@ -376,7 +383,8 @@ class local_kronosfeedws_userset extends external_api {
         }
 
         if (false === self::autoassociation_field_is_valid_type($field->id)) {
-            return self::create_error_structure(-2, 'Auto-associate field is not a valid type.  Valid types are "text", "menu" and "checkbox".');
+            return self::create_error_structure(-2, 'Auto-associate field is not a valid type.  Valid types are "text", "menu" ' .
+                'and "checkbox".');
         }
 
         if (('menu' == $field->datatype || 'text' == $field->datatype) && empty($fieldvalue)) {
@@ -407,7 +415,8 @@ class local_kronosfeedws_userset extends external_api {
      * @param int $secondaafieldid The Moodle profile field id for the first auto associate field.
      * @param string $secondaafieldvalue The Moodle profile field value for the first auto associate field.
      */
-    public static function set_auto_associate_field($usersetid, $firstaafieldid = 0, $firstaafieldvalue = '', $secondaafieldid = 0, $secondaafieldvalue = '') {
+    public static function set_auto_associate_field($usersetid, $firstaafieldid = 0, $firstaafieldvalue = '', $secondaafieldid = 0,
+                                                    $secondaafieldvalue = '') {
         global $DB;
 
         // Get the "old" (existing) profile field assignment values.
@@ -454,7 +463,8 @@ class local_kronosfeedws_userset extends external_api {
     /**
      * This function validates whether expiry date, passed as a parameter, is in an ISO format.
      * @param $string $xpirydate The expiry date expressed in an ISO format.
-     * @return array An array whose first value is the field short name, second value is the converted expiry date and third value is an empty array.
+     * @return array An array whose first value is the field short name, second value is the converted expiry date and third value
+     * is an empty array.
      * Or whose first value is false and second value is an array with an error code, if an error occured.
      */
     public static function validate_expiry_date($expirydate = '2000-01-01 00:00:00') {
@@ -473,7 +483,8 @@ class local_kronosfeedws_userset extends external_api {
         $field = $DB->get_record_sql($sql, $sqlparams);
 
         if (empty($field)) {
-            return array(false, self::create_error_structure(-6, 'Expiry date field does not exist as a field in the User Set context'));
+            return array(false, self::create_error_structure(-6, 'Expiry date field does not exist as a field in the User Set ' .
+                'context'));
         }
 
         $datetime = date_create_from_format('Y-m-d H:i:s', $expirydate);
@@ -485,7 +496,8 @@ class local_kronosfeedws_userset extends external_api {
             return array($field->shortname, $timestamp, array());
         }
 
-        return array(false, self::create_error_structure(-7, 'Expiry date is an invalid format.  Expiry date format must be YYYY-MM-DD hh:mm:ss'));
+        return array(false, self::create_error_structure(-7, 'Expiry date is an invalid format.  ' .
+            'Expiry date format must be YYYY-MM-DD hh:mm:ss'));
     }
 
     /**
@@ -498,8 +510,10 @@ class local_kronosfeedws_userset extends external_api {
             'solutionid' => new external_value(PARAM_TEXT, 'The User Set local_kronosfeedws_userset ID', VALUE_REQUIRED),
             'name' => new external_value(PARAM_TEXT, 'Userset name', VALUE_OPTIONAL),
             'display' => new external_value(PARAM_TEXT, 'Userset description', VALUE_OPTIONAL),
-            'parent' => new external_value(PARAM_TEXT, 'Userset parent name. If the parent field is left empty, the User Set created will be a top level User Set', VALUE_OPTIONAL),
-            'expiry' => new external_value(PARAM_TEXT, 'Customer User expiry date in the following format: YYYY-MM-DD hh:mm:ss', VALUE_OPTIONAL),
+            'parent' => new external_value(PARAM_TEXT, 'Userset parent name. If the parent field is left empty, the User Set ' .
+                'created will be a top level User Set', VALUE_OPTIONAL),
+            'expiry' => new external_value(PARAM_TEXT, 'Customer User expiry date in the following format: YYYY-MM-DD hh:mm:ss',
+                VALUE_OPTIONAL),
             'autoassociate1' => new external_value(PARAM_TEXT, 'First auto-association Moodle field shortname', VALUE_OPTIONAL),
             'autoassociate1_value' => new external_value(PARAM_TEXT, 'First auto-association Moodle field value', VALUE_OPTIONAL),
             'autoassociate2' => new external_value(PARAM_TEXT, 'Second auto-association Moodle field shortname', VALUE_OPTIONAL),
@@ -589,12 +603,15 @@ class local_kronosfeedws_userset extends external_api {
     }
 
     /**
-     * Performs userset update.  This code is refactored code from local/datahub/ws/elis/userset_update.class.php @see userset_update().
+     * Performs userset update.  This code is refactored code from local/datahub/ws/elis/userset_update.class.php
+     * @see userset_update().
      * User Sets will be updated based on a matching User Set profile field value.
      * Kronos specific business logic will also bee applied for for changing a User set expiry date.  The logic works as follows.
-     * 1. If the expiry date parameter is greater than the User Set eexpiry date and extension date, then set the User Set expiry date to the prameter
+     * 1. If the expiry date parameter is greater than the User Set eexpiry date and extension date, then set the User Set expiry
+     * date to the prameter
      *    AND set the extension date to Janurary 1, 2000.
-     * 2. If the expiry date parameter is greater than the User Set expiry date BUT less than the User Set extension date, do not update the User Set expiry date.
+     * 2. If the expiry date parameter is greater than the User Set expiry date BUT less than the User Set extension date,
+     * do not update the User Set expiry date.
      * 3. If the expiry date parameter is less than the User Set expiry date, do not update the User Set expiry date.
      * @throws moodle_exception If there was an error in passed parameters.
      * @throws data_object_exception If there was an error creating the entity.
@@ -662,7 +679,6 @@ class local_kronosfeedws_userset extends external_api {
         $data->autoassociate2 = $autoassociatetwo;
         $data->autoassociate2_value = $autoassociatetwovalue;
 
-        $record = new stdClass;
         // Need all custom fields, etc.
         $record = $data;
 
@@ -688,7 +704,8 @@ class local_kronosfeedws_userset extends external_api {
 
         // Initialize the User Set object, setting the properties from the data object.
         $userset = new userset($usersetobj->usersetid);
-        // Resolves KRONOSDEV-67, otherwise the depth will get set to 1 and will prevent the Solution ID search method from finding a the User Set.
+        // Resolves KRONOSDEV-67, otherwise the depth will get set to 1 and will prevent the Solution ID search method from finding
+        // a the User Set.
         $userset->parent;
         $userset->depth;
 
@@ -698,7 +715,8 @@ class local_kronosfeedws_userset extends external_api {
         $userset = self::userset_set_new_expiry_date($userset, $expirydate[0], $expirydate[1]);
 
         // Save auto-associate field values.
-        self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2, $data->autoassociate2_value);
+        self::set_auto_associate_field($userset->id, $data->autoassociate1, $data->autoassociate1_value, $data->autoassociate2,
+            $data->autoassociate2_value);
 
         $userset->save();
 
@@ -738,7 +756,8 @@ class local_kronosfeedws_userset extends external_api {
         // Check if the expiry date configuration setting for the plug-in has been set.
         $extensionfieldid = get_config('local_kronosfeedws', 'extension');
 
-        // Check if the configured field exists in the ELIS profile fields table, has a data type of datetime and belongs to the User Set context.
+        // Check if the configured field exists in the ELIS profile fields table, has a data type of datetime and belongs to the
+        // User Set context.
         $sql = 'SELECT f.shortname
                   FROM {'.field::TABLE.'} f
                   JOIN {'.field_contextlevel::TABLE.'} fctx ON f.id = fctx.fieldid AND fctx.contextlevel = ?
@@ -756,7 +775,8 @@ class local_kronosfeedws_userset extends external_api {
 
     /**
      * Kronos specific business logic will also bee applied for for changing a User set expiry date.  The logic works as follows.
-     * If the expiry date parameter is greater than the User Set eexpiry date and extension date, then set the User Set expiry date to the prameter
+     * If the expiry date parameter is greater than the User Set eexpiry date and extension date, then set the User Set expiry date
+     * to the prameter
      *    AND set the extension date to Janurary 1, 2000.
      * else do not update any of the User Set expiry or extension fields.
      * @param object $userset A user set object.
@@ -777,8 +797,8 @@ class local_kronosfeedws_userset extends external_api {
         if (!empty($extensionfieldname)) {
             $extfield = 'field_'.$extensionfieldname;
 
-            // If the expiry date is greater than the User Set expiry and the User Set extension, set the User Set expiry to the new value
-            // and set the extension date to the default value.
+            // If the expiry date is greater than the User Set expiry and the User Set extension, set the User Set
+            // expiry to the new value and set the extension date to the default value.
             if ($expiryvalue > $olduserset->$expfield && $expiryvalue > $olduserset->$extfield) {
                 $userset->$expfield = $expiryvalue;
                 $userset->$extfield = strtotime(self::DEFAULTDATE);
@@ -849,7 +869,6 @@ class local_kronosfeedws_userset extends external_api {
             return 'field_does_not_exist';
         }
 
-        $usetsolutionfieldid = get_config('local_kronosfeedws', 'solutionid');
         $result = $DB->get_record('local_eliscore_field', array('id' => $fieldid));
 
         if (empty($result)) {
@@ -860,7 +879,8 @@ class local_kronosfeedws_userset extends external_api {
     }
 
     /**
-     * This function creates a User Set, if no User Set is found with a matching Solution Id.  If a matching Solution Id is found then the User Set is updated.
+     * This function creates a User Set, if no User Set is found with a matching Solution Id.
+     * If a matching Solution Id is found then the User Set is updated.
      * @throws moodle_exception If there was an error in passed parameters.
      * @throws data_object_exception If there was an error creating the entity.
      * @param array $data The incoming data parameter.
